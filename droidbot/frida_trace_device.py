@@ -1,15 +1,17 @@
 import frida
-import goless
 import sys
+import threading
 import time  # TODO: delete
 
+from queue import Queue
+
 class FridaTrace(object):
-    def __init__(self, app, on_message):
+    def __init__(self, app, q):
         """
         takes in the app name and an on_message function
         """
         self.app = app
-        self.on_message = on_message
+        self.q = q
         self.script = """
         Java.perform(function() {
 
@@ -63,7 +65,25 @@ class FridaTrace(object):
         });
         """
 
+        try:
+            thread = threading.Thread(target=self.start_trace, args=())
+            thread.daemon = True
+            thread.start()
+        except (KeyboardInterrupt, SystemExit):
+            sys.exit()
+    
     def start_trace(self):
+        """
+        start execution trace of the target app, will block indefinitely
+        """
+
+        # receive message from agent within app
+        def on_message(message, data):
+            """
+            receives messages sent from inside the target process
+            """
+            self.q.put(message)
+
         def on_process_crashed(crash):
             """
             generate log when process crashes
@@ -86,34 +106,18 @@ class FridaTrace(object):
         session.on('detached', on_detached)
 
         script = session.create_script(self.script)
-        script.on('message', self.on_message)
+        script.on('message', on_message)
         print('loading script...')
         script.load()
 
         try:
             print('reading stdin...')
             sys.stdin.read()
-        except KeyboardInterrupt:
-            pass
+        except (KeyboardInterrupt, SystemExit):
+            sys.exit()
 
-chan1 = goless.chan()
-chan2 = goless.chan()
-
-# receive message from agent within app
-def on_message(message, data):
-    """
-    receives messages sent from inside the target process
-    """
-    chan1.send(message["payload"])
-
-def func2():
-    time.sleep(2)
-    chan2.send("booyah")
-
-ft = FridaTrace("com.whatsapp", on_message)
-goless.go(ft.start_trace())
-goless.go(func2)
+q = Queue()
+ft = FridaTrace("com.whatsapp", q)
 
 while True:
-    case, val = goless.select([goless.rcase(chan1), goless.rcase(chan2)])
-    print(val)
+    print(q.get())
