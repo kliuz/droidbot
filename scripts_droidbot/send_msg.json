@@ -1,0 +1,63 @@
+{
+    "views": {
+        "home": {
+            "resource_id": ".*list",
+            "class": ".*ListView"
+        },
+        "conversation": {
+            "resource_id": ".*contact_row_container",
+            "class": ".*RelativeLayout"
+        },
+        "conversation_name": {
+            "resource_id": "com.whatsapp:id/conversations_row_contact_name",
+            "class": ".*TextView",
+            "text": "(808) 783-0786"
+        },
+        "chat_box": {
+            "resource_id": ".*entry",
+            "class": ".*EditText"
+        },
+        "send_button": {
+            "resource_id": ".*send",
+            "class": ".*ImageButton"
+        },
+        "call_icons": {
+            "class": ".*LinearLayoutCompat"
+        }
+    },
+    "states": {
+        "home_page": {
+            "views": ["home", "conversation"]
+        },
+        "conversation_page": {
+            "views": ["chat_box", "call_icons"] 
+        }
+    },
+    "operations": {
+        "select_conversation": [
+            {
+                "event_type": "touch",
+                "target_view": "conversation"
+            }
+        ],
+        "send_message": [
+            {
+                "event_type": "touch",
+                "target_view": "chat_box"
+            },
+            {
+                "event_type": "set_text",
+                "target_view": "chat_box",
+                "text": "hello cruel world!"
+            },
+            {
+                "event_type": "touch",
+                "target_view": "send_button"
+            }
+        ]
+    },
+    "main": {
+        "home_page": ["select_conversation"],
+        "conversation_page": ["send_message"]
+    }
+}

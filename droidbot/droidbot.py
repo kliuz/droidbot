@@ -144,7 +144,7 @@ class DroidBot(object):
 
             if not self.enabled:
                 return
-            self.device.install_app(self.app)
+            # self.device.install_app(self.app)
 
             if not self.enabled:
                 return

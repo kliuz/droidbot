@@ -61,3 +61,7 @@ _site
 Gemfile.lock
 .DS_Store
 documents
+
+# kliuz files
+output/
+*.apk
