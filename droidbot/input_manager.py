@@ -111,6 +111,7 @@ class InputManager(object):
         try:
             if self.policy is not None:
                 self.policy.start(self)
+                # TODO: start Frida script here
             elif self.policy_name == POLICY_NONE:
                 self.device.start_app(self.app)
                 if self.event_count == 0:

@@ -82,13 +82,14 @@ class FridaTrace(object):
             """
             receives messages sent from inside the target process
             """
-            self.q.put(message)
+            if message["type"] != "error":
+                self.q.put(message["payload"])
 
         def on_process_crashed(crash):
             """
             generate log when process crashes
             """
-            print('crash', crash, crash.report)
+            print("crash", crash, crash.report)
 
         def on_detached(reason, crash):
             """
@@ -100,24 +101,24 @@ class FridaTrace(object):
             sys.exit()
 
         device = frida.get_usb_device(1)
-        device.on('process-crashed', on_process_crashed)
+        device.on("process-crashed", on_process_crashed)
 
         session = device.attach(self.app)
-        session.on('detached', on_detached)
+        session.on("detached", on_detached)
 
         script = session.create_script(self.script)
-        script.on('message', on_message)
-        print('loading script...')
+        script.on("message", on_message)
+        print("loading script...")
         script.load()
 
         try:
-            print('reading stdin...')
+            print("reading stdin...")
             sys.stdin.read()
         except (KeyboardInterrupt, SystemExit):
             sys.exit()
 
-q = Queue()
-ft = FridaTrace("com.whatsapp", q)
+# q = Queue()
+# ft = FridaTrace("com.whatsapp", q)
 
-while True:
-    print(q.get())
+# while True:
+#     print(q.get())

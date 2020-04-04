@@ -2,8 +2,11 @@ import sys
 import json
 import logging
 import random
+import time
 from abc import abstractmethod
+from queue import Queue
 
+from .frida_trace_device import FridaTrace
 from .input_event import InputEvent, KeyEvent, IntentEvent, TouchEvent, ManualEvent, SetTextEvent
 from .utg import UTG
 
@@ -56,6 +59,11 @@ class InputPolicy(object):
         :param input_manager: instance of InputManager
         """
         count = 0
+
+        # hacky way of tracing WhatsApp
+        q = Queue()
+        ft = FridaTrace("com.whatsapp", q)
+
         while input_manager.enabled and count < input_manager.event_count:
             try:
                 # make sure the first event is go to HOME screen
@@ -66,6 +74,13 @@ class InputPolicy(object):
                     event = IntentEvent(self.app.get_start_intent())
                 else:
                     event = self.generate_event()
+                
+                # pause for 1 second to wait for Frida events to roll in
+                time.sleep(1)
+                payload = []
+                while not q.empty():
+                    payload.append(q.get())
+                event.__dict__["frida_payload"] = payload
                 input_manager.add_event(event)
             except KeyboardInterrupt:
                 break
